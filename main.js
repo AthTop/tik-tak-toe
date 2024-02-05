@@ -4,7 +4,7 @@
 // has a function to place markers on the board
 
 const gameBoard = (function(){
-    let boardArray = [[], [], []];
+    let boardArray = [['', '', '',], [], []];
     const placeMarker = function(marker, position) {
         let [x, y] = [position[0] -1, position[1] - 1];
         boardArray[x][y] = marker;
@@ -43,13 +43,24 @@ const game = (function(){
     };
     // Game loop
     const gameLoop = function() {
-        
+        let player1 = createPlayer();
+        do {
+            turn(player1);
+        }
+        while (!winCheck(player1.marker));
+        console.log(`${player1.name} wins.`);
     };
     // Winning condition
-    const winCheck = function() {
+    const winCheck = function(marker) {
         // Helper functions
-        // Helper function to compare all elements in an array
-        const allEqual = array => array.every(val => val === array[0]);
+        // Helper function to compare elements in array to marker
+        const compareMarker = function(array) {
+            let count = 0;
+            for (let i = 0; i < array.length; i++) {
+                if (array[i] === marker) count++;
+                if (count === 3) return true;
+            };
+        };
         // Helper function to get diagonal arrays 
         const diagonalArray = array => array.map((value, index) => value[index]);
         // Helper arrays for diagonals
@@ -60,14 +71,15 @@ const game = (function(){
             let row = gameBoard.board()[i];
             // Helper array for columns
             let columnArray = gameBoard.board().map(column => column[i]);
-            if(allEqual(row)) return console.log(row[0] + `Row ${i}`);
-            if(allEqual(columnArray)) return console.log(columnArray[0] + `Column ${i}`);
+            if(compareMarker(row)) return true;
+            if(compareMarker(columnArray)) return true;
         };
         // Check Diagonals
-        if(allEqual((diagonalRight))) return console.log(diagonalRight[0] + ' Diagonal from Right');
-        if(allEqual((diagonalLeft))) return console.log(diagonalLeft[0] + ' Diagonal from Left');
+        if(compareMarker((diagonalRight))) return true;
+        if(compareMarker((diagonalLeft))) return true;
+        return false;
     };
-    return {winCheck, createPlayer, turn};
+    return {gameLoop};
 })();
 
 
