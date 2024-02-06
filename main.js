@@ -75,6 +75,7 @@ const game = (function(){
             return false;
         };
         gameBoard.placeMarker(player.marker, selectedCell);
+        return true;
     };
     // Returns players info
     const getPlayers = function() {
@@ -95,7 +96,7 @@ const game = (function(){
     // Play a round
     const playRound = function(selectedCell) {
         while(true) {
-            if(!turn(activePlayer, selectedCell)){
+            if(turn(activePlayer, selectedCell)){
                 if(isWin(activePlayer)) {
                     activePlayer.score++;
                     roundStateChange('win');
@@ -109,6 +110,7 @@ const game = (function(){
                 switchPlayer();
                 break;
             };
+            return;
         };
     };
     const roundStateChange = function(condition){
