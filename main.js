@@ -263,7 +263,7 @@ const displayController = (function() {
     };
     function resetHandler(e) {
         if(e.target.classList.contains('reset')){
-            gameBoard.resetBoard();
+            game.initGame();
             updateScreen();
         };
     };
