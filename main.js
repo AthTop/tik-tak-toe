@@ -60,6 +60,7 @@ function player(name, marker, score) {
 const game = (function(){
     const players = [];
     let activePlayer = players[0];
+    let roundState = '';
     //Ask player for their name and marker of choice
     const createPlayer = function(playerName) {
         const score = 0;
@@ -88,6 +89,7 @@ const game = (function(){
     // init game
     const initGame = function() {
         activePlayer = players[0];
+        roundStateChange('');
         gameBoard.resetBoard();
     };
     // Play a round
@@ -96,19 +98,25 @@ const game = (function(){
             if(!turn(activePlayer, selectedCell)){
                 if(isWin(activePlayer)) {
                     activePlayer.score++;
-                    return 'win';
+                    roundStateChange('win');
+                    return;
                 };
                 // Check if all available cells are occupied for a tie
                 if (isTie()) {
-                    return 'tie';
-                }
+                    roundStateChange('tie');
+                    return;
+                };
                 switchPlayer();
                 break;
             };
         };
-        return false;
     };
-
+    const roundStateChange = function(condition){
+        roundState = condition;
+    };
+    const roundStateStatus = function(){
+        return roundState;
+    };
     // Winning condition
     const isWin = function(player) {
         // Helper function to compare elements in array to marker
@@ -142,7 +150,7 @@ const game = (function(){
             return true;
         };
     };
-    return { initGame, playRound, getPlayers, createPlayer, getActivePlayer };
+    return { initGame, playRound, getPlayers, createPlayer, getActivePlayer, roundStateStatus };
 })();
 
 
@@ -152,17 +160,19 @@ const displayController = (function() {
     boardDiv.classList.add('board');
     const infoDiv = document.createElement('div');
     infoDiv.classList.add('info');
-    // const boardDiv = document.querySelector('.board');
-    // const infoDiv = document.querySelector('.info');
     const updateScreen = function() {
         boardDiv.textContent = '';
         infoDiv.textContent = '';
+        containerDiv.classList.add('game');
         const board = gameBoard.getBoard();
         const players = game.getPlayers();
         // Display players info
         for (const player of players) {
             const playerDiv = document.createElement('div');
             playerDiv.classList.add('player');
+            if(player.name === game.getActivePlayer()){
+                playerDiv.classList.add('active-player');
+            };
             for (const prop in player) {
                 const p = document.createElement('p');
                 p.textContent = `${prop} : ${player[prop]}`;
@@ -170,6 +180,10 @@ const displayController = (function() {
             };
             infoDiv.append(playerDiv);
         };
+        const resetButton = document.createElement('button');
+        resetButton.classList.add('reset');
+        resetButton.textContent = 'Reset';
+        infoDiv.append(resetButton);
         // Display the board
         board.forEach((row, i) => {
             row.forEach((cell, j) => {
@@ -189,19 +203,25 @@ const displayController = (function() {
         if (e.target.classList.contains('cell')){
             const selectedCell = [e.target.dataset.row, e.target.dataset.column];
             if(!selectedCell) return;
-            if(game.playRound(selectedCell) === 'win') {
-                displayWin();
+            game.playRound(selectedCell)
+            if(game.roundStateStatus() === 'win' || game.roundStateStatus() === 'tie') {
+                displayStatus();
                 game.initGame();
             };
             updateScreen();
         };   
     };
-    const displayWin = function() {
+    const displayStatus = function() {
         const dialog = document.createElement('dialog');
         const p = document.createElement('p');
         p.classList.add('message');
         dialog.open = true;
-        p.textContent = `${game.getActivePlayer()} wins this round!`;
+        if(game.roundStateStatus() === 'win') {
+            p.textContent = `${game.getActivePlayer()} wins this round!`;
+        };
+        if(game.roundStateStatus() === 'tie') {
+            p.textContent = `It's a tie!`;
+        };
         dialog.appendChild(p);
         containerDiv.appendChild(dialog);
         setTimeout(() => {
@@ -241,8 +261,15 @@ const displayController = (function() {
             playerInputInfo();
         };
     };
+    function resetHandler(e) {
+        if(e.target.classList.contains('reset')){
+            gameBoard.resetBoard();
+            updateScreen();
+        };
+    };
     containerDiv.addEventListener('click', clickStartHandler);
     containerDiv.addEventListener('click', clickCellHandler);
+    containerDiv.addEventListener('click', resetHandler);
     return { startScreen };
 })();
 

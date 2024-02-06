@@ -1,37 +1,44 @@
+body {
+    background: #fae8ff;
+}
+
 .cell {
-    border: 1px solid black;
+    border-radius: 10px;
     font-size: calc(5vw + 5vh);
     aspect-ratio: 1;
+    background: #4338ca;
+    color: white;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .board {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
 }
 
 .info {
     display: flex;
     gap: 50px;
     text-transform: capitalize;
+    justify-content: space-between;
+    background-color: #d946ef;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .container {
     height: 50vh;
     width: 50vw;
     margin: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: grid;
+    grid-template-rows: auto 1fr;
     padding: 0;
+    justify-items: center;
 }
 
-.board {
-    flex: 1 1 80%;
-    width: 80%;
-}
-
-.info {
-    flex: 1;
+.container.game {
+    justify-items: initial;
 }
 
 .player {
@@ -39,6 +46,11 @@
     line-height: 0.3;
     font-weight: bold;
     height: min-content;
+    flex: 1;
+}
+
+.active-player {
+    background-color: #e879f9;
 }
 
 .player p {
@@ -57,6 +69,15 @@
     background: #e9d5ff;
     position: fixed;
     top: -50%;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+dialog[open]{
+    padding: 25px 25px;
+    border: none;
+    border-radius: 15px;
+    background: #e9d5ff;
+    position: absolute;
+    top: 25%;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
@@ -87,15 +108,12 @@
     width: 40%;
     margin: auto;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 15px;
 }
 
 .modal button:active {
     box-shadow: none;
     background-color: #d946ef;
-}
-
-::backdrop {
-    background: #fae8ff;
 }
 
 .start-button {
@@ -107,9 +125,22 @@
     line-height: 2;
     margin: auto;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 15px;
 }
 
 .start-button:active {
     box-shadow: none;
     background-color: #d946ef;
+}
+
+.reset {
+    background-color: #4a044e;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    margin: auto;
+    margin-right: 20px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 15px;
 }
