@@ -4,9 +4,22 @@
 // has a function to place markers on the board
 
 const gameBoard = (function(){
-    const boardArray = [[], [], []];
-    const placeMarker = function(marker, position) {
-        let [x, y] = [position[0] -1, position[1] - 1];
+    let boardArray = [];
+    const boardArrayInit = function(){
+        boardArray = []
+        for(let i = 0; i < 3; i++){
+            boardArray[i] = [];
+            for (let j = 0; j < 3; j++) {
+                boardArray[i].push('');
+            };
+        };
+    };
+    const resetBoard = function() {
+        boardArrayInit();
+    };
+    // If cell is occupied with another marker, return false for UI
+    const placeMarker = function(marker, selectedCell) {
+        [x, y] = arrayToInt(selectedCell);
         boardArray[x][y] = marker;
     };
     const getBoard = function() {
@@ -26,55 +39,76 @@ const gameBoard = (function(){
     const availableCells = function() {
         return (9 - boardCells());
     };
-    return { placeMarker, getBoard, availableCells };
+    const isCellOccupied = function(selectedCell) {
+        [x, y] = arrayToInt(selectedCell);
+        if(boardArray[x][y] === 'X' || boardArray[x][y] === 'O'){
+            return true;
+        };
+        return false;
+    };
+    const arrayToInt = function(array) {
+        let [x, y] = array;
+        return [parseInt(x), parseInt(y)];
+    }
+    return { placeMarker, getBoard, availableCells, isCellOccupied, resetBoard };
 })();
 
-// player object
-
-function player(name, marker) {
-    return {name, marker};
+function player(name, marker, score) {
+    return {name, marker, score};
 }
 
-// game flow object
-// each player takes a turn
-
 const game = (function(){
+    const players = [];
+    let activePlayer = players[0];
     //Ask player for their name and marker of choice
-    const createPlayer = function() {
-        const playerName = prompt("What's your name?");
-        const playerMarker = prompt("What's your marker? O or X");
-        return player(playerName, playerMarker.toUpperCase());
-    };
-    // Ask player where to place the marker
-    const playerChoice = function() {
-        const playerChoiceX = prompt("Where to place the marker? Row 1 to 3");
-        const playerChoiceY = prompt("Which column? 1-3");
-        return [playerChoiceX, playerChoiceY];
+    const createPlayer = function(playerName) {
+        const score = 0;
+        let playerMarker = 'X';
+        if (!(players[0] === undefined) ) playerMarker = 'O';
+        players.push(player(playerName, playerMarker, score));
     };
     // Take a turn, asking the player where to place marker and place it in the gameboard
-    const turn = function(player) {
-        gameBoard.placeMarker(player.marker, playerChoice());
+    // Reccursively check if cell is occupied
+    const turn = function(player, selectedCell) {
+        if (gameBoard.isCellOccupied(selectedCell)) {
+            return false;
+        };
+        gameBoard.placeMarker(player.marker, selectedCell);
+    };
+    // Returns players info
+    const getPlayers = function() {
+        return players;
+    };
+    const switchPlayer = () => {
+        activePlayer = activePlayer === players[0] ? players[1] : players[0];
+    };
+    const getActivePlayer = function() {
+        return activePlayer.name;
+    };
+    // init game
+    const initGame = function() {
+        activePlayer = players[0];
+        gameBoard.resetBoard();
     };
     // Play a round
-    const playRound = function() {
-        const player1 = createPlayer();
-        const player2 = createPlayer();
-        let activePlayer = player1;
-        const switchPlayer = () => {
-            activePlayer = activePlayer === player1 ? player2 : player1;
-        };
+    const playRound = function(selectedCell) {
         while(true) {
-            console.table(gameBoard.getBoard());
-            turn(activePlayer);
-            if(isWin(activePlayer)) {
-                console.log(`${activePlayer.name} wins!`);
+            if(!turn(activePlayer, selectedCell)){
+                if(isWin(activePlayer)) {
+                    activePlayer.score++;
+                    return 'win';
+                };
+                // Check if all available cells are occupied for a tie
+                if (isTie()) {
+                    return 'tie';
+                }
+                switchPlayer();
                 break;
             };
-            // Check if all available cells are occupied for a tie
-            if (isTie()) break;
-            switchPlayer();
         };
+        return false;
     };
+
     // Winning condition
     const isWin = function(player) {
         // Helper function to compare elements in array to marker
@@ -105,14 +139,111 @@ const game = (function(){
     };
     const isTie = function() {
         if (gameBoard.availableCells() === 0){
-            console.log(`It's a tie`);
             return true;
         };
     };
-    return {playRound};
+    return { initGame, playRound, getPlayers, createPlayer, getActivePlayer };
 })();
 
 
 const displayController = (function() {
+    const containerDiv = document.querySelector('.container');
+    const boardDiv = document.createElement('div');
+    boardDiv.classList.add('board');
+    const infoDiv = document.createElement('div');
+    infoDiv.classList.add('info');
+    // const boardDiv = document.querySelector('.board');
+    // const infoDiv = document.querySelector('.info');
+    const updateScreen = function() {
+        boardDiv.textContent = '';
+        infoDiv.textContent = '';
+        const board = gameBoard.getBoard();
+        const players = game.getPlayers();
+        // Display players info
+        for (const player of players) {
+            const playerDiv = document.createElement('div');
+            playerDiv.classList.add('player');
+            for (const prop in player) {
+                const p = document.createElement('p');
+                p.textContent = `${prop} : ${player[prop]}`;
+                playerDiv.append(p);
+            };
+            infoDiv.append(playerDiv);
+        };
+        // Display the board
+        board.forEach((row, i) => {
+            row.forEach((cell, j) => {
+                const cellButton = document.createElement('button');
+                cellButton.classList.add('cell');
+                cellButton.dataset.row = i;
+                cellButton.dataset.column = j;
+                cellButton.textContent = cell;
+                boardDiv.appendChild(cellButton);
+            });
+        });
+        // Append the divs to the container 
+        containerDiv.appendChild(infoDiv);
+        containerDiv.appendChild(boardDiv);
+    };
+    function clickCellHandler(e){
+        if (e.target.classList.contains('cell')){
+            const selectedCell = [e.target.dataset.row, e.target.dataset.column];
+            if(!selectedCell) return;
+            if(game.playRound(selectedCell) === 'win') {
+                displayWin();
+                game.initGame();
+            };
+            updateScreen();
+        };   
+    };
+    const displayWin = function() {
+        const dialog = document.createElement('dialog');
+        const p = document.createElement('p');
+        p.classList.add('message');
+        dialog.open = true;
+        p.textContent = `${game.getActivePlayer()} wins this round!`;
+        dialog.appendChild(p);
+        containerDiv.appendChild(dialog);
+        setTimeout(() => {
+            dialog.remove();
+        }, 3000);
+    };
+    // Player Info Intereaction
+    const playerInputInfo = function() {
+        const modal = document.querySelector('dialog');
+        const player1 = document.querySelector('#player-1');
+        const player2 = document.querySelector('#player-2');
+        modal.showModal();
+        modal.addEventListener('click', (e) => {
+            if (e.target.classList.contains('submit-names')) {
+                e.preventDefault();
+                game.createPlayer(player1.value);
+                game.createPlayer(player2.value);
+                modal.close();
+                game.initGame();
+                updateScreen();
+            };
+        });
+    };
+    // Create a begin game screen
+    const startScreen = function() {
+        const startScreentDiv = document.createElement('div');
+        const startButton = document.createElement('button');
+        startButton.classList.add('start-button');
+        startScreentDiv.classList.add('start-screen');
+        startButton.textContent = 'Select Players';
+        startScreentDiv.append(startButton);
+        containerDiv.append(startScreentDiv);
+    };
+    function clickStartHandler(e){
+        if (e.target.classList.contains('start-button')){
+            containerDiv.textContent = '';
+            playerInputInfo();
+        };
+    };
+    containerDiv.addEventListener('click', clickStartHandler);
+    containerDiv.addEventListener('click', clickCellHandler);
+    return { startScreen };
+})();
 
-});
+displayController.startScreen();
